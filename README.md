@@ -1,6 +1,6 @@
 # High-Top Dash
 
-A 3D endless runner you play in the browser. Dodge trains, jump barriers, roll under bars, grab coins and stay ahead of Coach.
+A cross-country themed 3D endless runner you play in the browser. Run the dirt trail through rolling hills, hurdle barrels, duck under course banners, climb hay wagons, grab coins and stay ahead of Coach. Calm background music is generated live in the browser (tap ♪ to mute).
 
 ## Play
 
