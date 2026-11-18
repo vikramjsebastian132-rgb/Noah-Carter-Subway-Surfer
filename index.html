@@ -142,7 +142,7 @@ let camDist=7;
 function resize(){
   const w=wrap.clientWidth||innerWidth,h=wrap.clientHeight||innerHeight;
   renderer.setSize(w,h); camera.aspect=w/h;
-  const portrait=w/h<0.85; camera.fov=portrait?72:60; camDist=portrait?8.6:7;
+  const portrait=w/h<0.85; camera.fov=portrait?80:68; camDist=portrait?8.6:7;
   camera.updateProjectionMatrix();
 }
 addEventListener('resize',resize); resize();
@@ -672,6 +672,7 @@ function updatePlay(dt){
   }
   if(S.mode!=='play')return;
 
+  S.ground=ground;
   if(jet){S.y+=(7.5-S.y)*Math.min(1,dt*2.5);S.vy=0;S.grounded=false;}
   else{
     S.vy-=GRAV*dt; S.y+=S.vy*dt;
@@ -798,7 +799,8 @@ function animateCoach(dt){
 const camPos=new THREE.Vector3(0,2,-4),camLook=new THREE.Vector3(0,1.4,0);
 function updateCamera(dt){
   let pos,look;
-  const gx=S.x*.6,gy=3.4+S.y*.6;
+  S.elev=lerp(S.elev||0,Math.max(S.ground||0,S.y*.45),Math.min(1,dt*5));
+  const elev=S.elev,gx=S.x*.6,gy=3.9+elev*1.05;
   if(S.mode==='menu'){
     S.menuA=Math.PI+Math.sin(t*.35)*.45;
     pos=new THREE.Vector3(Math.sin(S.menuA)*4.3,1.9,Math.cos(S.menuA)*4.3); look=new THREE.Vector3(0,1.35,0);
@@ -806,10 +808,10 @@ function updateCamera(dt){
   } else {
     if(S.camT<1)S.camT=Math.min(1,S.camT+dt*1.1);
     const e=S.camT<1?S.camT*S.camT*(3-2*S.camT):1;
-    const a=lerp(S.menuA,0,e), r=lerp(4.3,camDist,e);
+    const a=lerp(S.menuA,0,e), r=lerp(4.3,camDist+elev*.6,e);
     const target=new THREE.Vector3(Math.sin(a)*r+gx*e,lerp(1.9,gy,e),Math.cos(a)*r);
-    const tl=new THREE.Vector3(lerp(0,S.x*.5,e),lerp(1.35,1.3+S.y*.6,e),lerp(0,-10,e));
-    if(S.mode==='over'){target.set(gx,gy-.4,camDist-1.2);}
+    const tl=new THREE.Vector3(lerp(0,S.x*.5,e),lerp(1.35,.9+elev*.35,e),lerp(0,-15,e));
+    if(S.mode==='over'){target.set(gx,gy-.4,camDist+elev*.6-1.2);}
     const k=S.camT<1?1:Math.min(1,dt*8);
     camPos.lerp(target,k);camLook.lerp(tl,k);
   }

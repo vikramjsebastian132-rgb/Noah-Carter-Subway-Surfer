@@ -24,3 +24,7 @@ Open `index.html` in a browser. No install or build step.
 - **Jetpack**: fly above the trains and collect sky coins
 
 Built with [three.js](https://threejs.org/). This is an original fan-made game and is not affiliated with any commercial game.
+
+## Deploy on Railway
+
+The repo includes a tiny Node server (`server.js`, no dependencies). Railway detects `package.json` and runs `npm start`, which serves the game on the `PORT` Railway provides. To run it locally: `npm start`, then open http://localhost:3000.
