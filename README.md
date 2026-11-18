@@ -16,11 +16,15 @@ Open `index.html` in a browser. No install or build step.
 | Hoverboard (3 per run, saves you from one crash) | H | Double-tap |
 | Pause | P or Esc | Pause button |
 
+## Score
+
+Your score is the distance you run, in meters. Orange banner arches mark every 250 m, and your best distance is saved in the browser.
+
 ## Power-ups
 
 - **Magnet**: pulls nearby coins to you
 - **Super sneakers**: jump high enough to land on trains
-- **2x score**: doubles your multiplier
+- **2x coins**: every coin counts double
 - **Jetpack**: fly above the trains and collect sky coins
 
 Built with [three.js](https://threejs.org/). This is an original fan-made game and is not affiliated with any commercial game.
