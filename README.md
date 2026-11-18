@@ -29,6 +29,14 @@ Your score is the distance you run, in meters. Orange banner arches mark every 2
 
 Built with [three.js](https://threejs.org/). This is an original fan-made game and is not affiliated with any commercial game.
 
+## Leaderboard
+
+After each run, your distance is posted to a shared leaderboard so friends can compare. The first time, you type a name (up to 16 letters or numbers); after that, every run posts automatically and the board keeps each name's best distance. Open **Leaderboard** from the start screen to see the top runners.
+
+The scores are stored by `server.js` (`GET /api/scores`, `POST /api/scores`). Because the game runs in the browser, a determined player could post a fake distance, so treat it as a friendly board.
+
 ## Deploy on Railway
 
-The repo includes a tiny Node server (`server.js`, no dependencies). Railway detects `package.json` and runs `npm start`, which serves the game on the `PORT` Railway provides. To run it locally: `npm start`, then open http://localhost:3000.
+The repo includes a tiny Node server (`server.js`, no dependencies). Railway detects `package.json` and runs `npm start`, which serves the game and the leaderboard on the `PORT` Railway provides.
+
+**Keep scores across redeploys:** Railway wipes the app's files on every deploy. In your Railway service, add a **Volume** (mount path `/data`) and set the variable `DATA_DIR=/data`. Without a volume the leaderboard resets each time you redeploy. To run it locally: `npm start`, then open http://localhost:3000.

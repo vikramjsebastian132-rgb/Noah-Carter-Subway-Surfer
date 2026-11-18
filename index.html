@@ -37,7 +37,7 @@ body{font-family:var(--body);color:var(--paper);touch-action:none;user-select:no
 .alert{position:fixed;left:50%;top:28%;transform:translateX(-50%);font-family:var(--display);font-size:clamp(20px,5vw,30px);color:var(--pop);
   text-shadow:0 3px 0 var(--ink);pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap}
 .alert.on{opacity:1}
-.overlay{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 70%,rgba(10,16,40,.15),rgba(10,16,40,.75));
+.overlay{position:fixed;inset:0;display:grid;place-items:center;overflow-y:auto;touch-action:pan-y;background:radial-gradient(ellipse at 50% 70%,rgba(10,16,40,.15),rgba(10,16,40,.75));
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px}
 .overlay[hidden]{display:none!important}
 .card{width:min(440px,100%);display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center}
@@ -60,6 +60,20 @@ h2{font-family:var(--display);font-weight:400;margin:0;font-size:clamp(30px,8vw,
 .res{background:var(--shade);border-radius:12px;padding:12px 6px;display:flex;flex-direction:column;gap:4px}
 .res span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#c9d3f2}
 .res strong{font-family:var(--display);font-weight:400;font-size:22px;font-variant-numeric:tabular-nums}
+.go.ghost{background:transparent;color:var(--paper);box-shadow:inset 0 0 0 2px var(--paper)}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.small-go{font-size:15px;padding:10px 16px}
+.lb{width:100%;display:flex;flex-direction:column;gap:8px}
+.lb-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;width:100%;max-height:min(42vh,340px);overflow-y:auto}
+.lb-list li{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;background:var(--shade);border-radius:10px;padding:8px 12px;text-align:left;font-variant-numeric:tabular-nums}
+.lb-list li.me{box-shadow:inset 0 0 0 2px var(--sun)}
+.lb-list .rk{font-family:var(--display);color:var(--sun)}
+.lb-list .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.lb-list .ds{font-weight:800}
+.name-row{display:flex;flex-direction:column;gap:6px;text-align:left;font-size:13px;color:#c9d3f2}
+.name-inline{display:flex;gap:8px}
+#nameInput{flex:1;min-width:0;font:600 16px var(--body);padding:10px 12px;border-radius:10px;border:2px solid #3a4775;background:var(--ink);color:var(--paper)}
+#nameInput:focus-visible{outline:3px solid var(--sun);outline-offset:1px}
 @media (prefers-reduced-motion:reduce){.go{transition:none}}
 </style>
 </head>
@@ -92,7 +106,7 @@ h2{font-family:var(--display);font-weight:400;margin:0;font-size:clamp(30px,8vw,
       <div class="key"><kbd>H</kbd>Hoverboard</div>
     </div>
     <p class="small">On a phone, swipe to move and double-tap for a hoverboard. You get 3 boards per run; each one saves you from one crash.</p>
-    <button class="go" id="startBtn">Start running</button>
+    <div class="btn-row"><button class="go" id="startBtn">Start running</button><button class="go ghost" id="boardBtnMenu">Leaderboard</button></div>
     <p class="small">Calm background music plays during runs. Tap ♪ to mute.</p>
     <p class="small" id="bestMenu">Best: 0</p>
   </div>
@@ -105,6 +119,15 @@ h2{font-family:var(--display);font-weight:400;margin:0;font-size:clamp(30px,8vw,
   </div>
 </div>
 
+<div class="overlay" id="boardView" hidden>
+  <div class="card">
+    <h2>Leaderboard</h2>
+    <p class="small" id="boardStatus">Loading…</p>
+    <ol class="lb-list" id="boardList"></ol>
+    <button class="go" id="boardClose">Back</button>
+  </div>
+</div>
+
 <div class="overlay" id="over" hidden>
   <div class="card">
     <h2 id="overTitle">Caught!</h2>
@@ -113,6 +136,14 @@ h2{font-family:var(--display);font-weight:400;margin:0;font-size:clamp(30px,8vw,
       <div class="res"><span>Distance</span><strong id="rScore">0</strong></div>
       <div class="res"><span>Coins</span><strong id="rCoins">0</strong></div>
       <div class="res"><span>Best</span><strong id="rBest">0</strong></div>
+    </div>
+    <div class="lb">
+      <div class="name-row" id="nameRow" hidden>
+        <label for="nameInput">Your name on the leaderboard</label>
+        <div class="name-inline"><input id="nameInput" maxlength="16" autocomplete="nickname" placeholder="e.g. Noah"><button class="go small-go" id="postBtn">Post</button></div>
+      </div>
+      <p class="small" id="lbStatus"></p>
+      <ol class="lb-list" id="overList"></ol>
     </div>
     <button class="go" id="againBtn">Run again</button>
   </div>
@@ -554,6 +585,70 @@ const SND={coin:()=>{sfx(1320,1760,.09,'square',.035)},jump:()=>sfx(300,620,.16,
   smash:()=>{sfx(900,80,.45,'sawtooth',.1);sfx(300,60,.3,'square',.08)},stumble:()=>sfx(220,90,.3,'sawtooth',.09),crash:()=>{sfx(160,40,.6,'sawtooth',.14);sfx(90,30,.5,'square',.08)},
   whistle:()=>{sfx(2600,2500,.25,'sine',.07);setTimeout(()=>sfx(2600,2550,.35,'sine',.07),280)}};
 
+/* ---------- leaderboard ---------- */
+function getName(){try{return localStorage.getItem('htd-name')||'';}catch(e){return '';}}
+function setName(n){try{localStorage.setItem('htd-name',n);}catch(e){}}
+const Board={kind:null,db:null,user:null,ready:null};
+Board.ready=(async()=>{
+  try{if(window.claude&&window.claude.use){const db=await window.claude.use('db');if(db){Board.db=db;Board.user=await window.claude.use('user');Board.kind='artifact';return;}}}catch(e){}
+  if(/^https?:$/.test(location.protocol)){try{const r=await fetch('api/scores',{cache:'no-store'});if(r.ok&&(r.headers.get('content-type')||'').includes('json')){Board.kind='server';return;}}catch(e){}}
+})();
+async function boardTop(){
+  await Board.ready;
+  if(Board.kind==='server'){const r=await fetch('api/scores',{cache:'no-store'});const j=await r.json();const me=getName().toLowerCase();
+    return (j.scores||[]).slice(0,25).map(x=>({name:String(x.name),best:+x.best||0,me:!!me&&String(x.name).toLowerCase()===me}));}
+  if(Board.kind==='artifact'){
+    const snap=await Board.db.collection('scores').orderBy('best','desc').limit(25).get();
+    const rows=snap.docs.map(d=>({id:d.id,best:+(d.data()||{}).best||0}));
+    const ps=rows.length&&Board.user?await Board.user.profiles(rows.map(r=>r.id)):{};
+    const myId=Board.user?await Board.user.id():null;
+    return rows.map(r=>({name:(ps[r.id]&&ps[r.id].name)||'Runner',best:r.best,me:r.id===myId}));
+  }
+  return null;
+}
+async function boardSubmit(m){
+  await Board.ready;
+  if(Board.kind==='server'){const name=getName();if(!name)return 'needname';
+    const r=await fetch('api/scores',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,meters:m})});
+    if(!r.ok)return r.status===429?'slow':'error';
+    try{const j=await r.json();const mine=(j.scores||[]).find(x=>String(x.name).toLowerCase()===name.toLowerCase());if(mine&&mine.best>m)return 'kept';}catch(e){}
+    return 'ok';}
+  if(Board.kind==='artifact'){
+    const id=Board.user?await Board.user.id():null;if(!id)return 'denied';
+    try{const ref=Board.db.doc('scores/'+id);const cur=await ref.get();const prev=cur.exists?+(cur.data()||{}).best||0:-1;
+      if(prev>=m)return 'kept';await ref.set({best:m,at:Date.now()});return 'ok';}catch(e){return 'denied';}
+  }
+  return 'none';
+}
+function renderBoard(el,rows){
+  el.textContent='';
+  rows.forEach((r,i)=>{const li=document.createElement('li');if(r.me)li.className='me';
+    const rk=document.createElement('span');rk.className='rk';rk.textContent=String(i+1);
+    const nm=document.createElement('span');nm.className='nm';nm.textContent=r.name+(r.me?' (you)':'');
+    const ds=document.createElement('span');ds.className='ds';ds.textContent=fmtM(r.best);
+    li.append(rk,nm,ds);el.appendChild(li);});
+}
+async function loadInto(listEl,statusEl,okText){
+  try{const rows=await boardTop();
+    if(rows===null){statusEl.textContent='The leaderboard works on the hosted version of the game.';listEl.textContent='';return;}
+    renderBoard(listEl,rows);statusEl.textContent=rows.length?okText:'No runs posted yet. Be the first!';
+  }catch(e){statusEl.textContent='Could not load the leaderboard. Check your connection and try again.';}
+}
+async function showOverBoard(){
+  const st=$('lbStatus'),list=$('overList');list.textContent='';$('nameRow').hidden=true;st.textContent='Loading leaderboard…';
+  await Board.ready;
+  if(!Board.kind){st.textContent='The leaderboard works on the hosted version of the game.';return;}
+  if(S.final<10){await loadInto(list,st,'Top runners');return;}
+  if(Board.kind==='server'&&!getName()){$('nameRow').hidden=false;$('nameInput').value='';
+    await loadInto(list,st,'');st.textContent='Add your name to post your '+fmtM(S.final)+'.';$('nameInput').focus();return;}
+  st.textContent='Posting your distance…';
+  const r=await boardSubmit(S.final);
+  const msg={ok:'Your '+fmtM(S.final)+' is on the board.',kept:'Your best run is already on the board.',denied:'You can see the board, but posting needs Contributor access from the game owner.',slow:'Too many posts at once. Try again in a minute.',error:'Could not post right now.'}[r]||'';
+  await loadInto(list,st,msg);
+  if(r!=='ok'&&r!=='kept')st.textContent=msg;
+}
+function cleanName(v){return v.replace(/[^A-Za-z0-9 _.'-]/g,'').trim().slice(0,16);}
+
 /* ---------- calm background music (generated live, original) ---------- */
 let music=null;
 const mtof=m=>440*Math.pow(2,(m-69)/12);
@@ -613,6 +708,8 @@ function act(a){
   }
 }
 addEventListener('keydown',e=>{
+  if(e.target&&e.target.tagName==='INPUT'){if(e.key==='Enter')$('postBtn').click();return;}
+  if(!$('boardView').hidden){if(e.key==='Escape')$('boardClose').click();return;}
   const k=e.key;
   if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].includes(k))e.preventDefault();
   if(S.mode==='menu'&&(k===' '||k==='Enter')){start();return;}
@@ -644,6 +741,9 @@ wrap.addEventListener('mousedown',e=>{mStart={x:e.clientX,y:e.clientY};});
 addEventListener('mouseup',e=>{if(!mStart)return;const dx=e.clientX-mStart.x,dy=e.clientY-mStart.y;mStart=null;if(Math.hypot(dx,dy)<30)return;if(Math.abs(dx)>Math.abs(dy))act(dx<0?'left':'right');else act(dy<0?'jump':'roll');});
 
 $('startBtn').onclick=start; $('againBtn').onclick=start;
+$('boardBtnMenu').onclick=()=>{$('menu').hidden=true;$('boardView').hidden=false;$('boardStatus').textContent='Loading…';$('boardList').textContent='';loadInto($('boardList'),$('boardStatus'),'Best distances');$('boardClose').focus();};
+$('boardClose').onclick=()=>{$('boardView').hidden=true;$('menu').hidden=false;$('boardBtnMenu').focus();};
+$('postBtn').onclick=()=>{const n=cleanName($('nameInput').value);if(!n){$('lbStatus').textContent='Type a name first (letters and numbers, up to 16).';$('nameInput').focus();return;}setName(n);showOverBoard();};
 $('pauseBtn').onclick=togglePause; $('resumeBtn').onclick=togglePause;
 $('muteBtn').onclick=()=>{muted=!muted;if(muted)stopMusic();else startMusic();$('muteBtn').textContent=muted?'×':'♪';$('muteBtn').blur();};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&S.mode==='play')togglePause();});
@@ -908,7 +1008,7 @@ function frame(now){
     $('overTitle').textContent=S.crashKind==='caught'?'Caught!':'Wipeout!';
     $('overMsg').textContent=S.crashKind==='caught'?'You tripped twice and Coach caught up.':'You ran straight into it. Shake it off.';
     $('rScore').textContent=S.final.toLocaleString()+' m';$('rCoins').textContent=S.coins;$('rBest').textContent=best.toLocaleString()+' m';
-    $('hud').hidden=true;$('over').hidden=false;$('againBtn').focus();
+    $('hud').hidden=true;$('over').hidden=false;$('againBtn').focus();showOverBoard();
   }
   if(S.shake>0)S.shake=Math.max(0,S.shake-dt);
   if(alertTimer>0){alertTimer-=dt;if(alertTimer<=0)$('alert').classList.remove('on');}
