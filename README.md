@@ -16,9 +16,9 @@ Open `index.html` in a browser. No install or build step.
 | Hoverboard (3 per run, saves you from one crash) | H | Double-tap |
 | Pause | P or Esc | Pause button |
 
-## Score
+## Score and the 5K finish
 
-Your score is the distance you run, in meters. Orange banner arches mark every 250 m, and your best distance is saved in the browser.
+Your score is the distance you run, in meters, with a progress bar toward 5K. Orange banner arches mark every 250 m. Reach the checkered **FINISH 5K** arch at 5,000 m to win; your finish time is recorded. Your best is saved in the browser.
 
 ## Power-ups
 
@@ -31,7 +31,7 @@ Built with [three.js](https://threejs.org/). This is an original fan-made game a
 
 ## Leaderboard
 
-After each run, your distance is posted to a shared leaderboard so friends can compare. The first time, you type a name (up to 16 letters or numbers); after that, every run posts automatically and the board keeps each name's best distance. Open **Leaderboard** from the start screen to see the top runners.
+After each run, your distance is posted to a shared leaderboard so friends can compare. The first time, you type a name (up to 16 letters or numbers); after that, every run posts automatically and the board keeps each name's best run: the farthest distance, or for 5K finishers, the fastest time. Open **Leaderboard** from the start screen to see the top runners.
 
 The scores are stored by `server.js` (`GET /api/scores`, `POST /api/scores`). Because the game runs in the browser, a determined player could post a fake distance, so treat it as a friendly board.
 

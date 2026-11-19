@@ -1,7 +1,8 @@
 // Static server + leaderboard API for High-Top Dash (e.g. on Railway). No dependencies.
 //
 //   GET  /api/scores            -> { scores: [{ name, best, at }] }  (best distance in meters, highest first)
-//   POST /api/scores {name, meters} -> keeps the higher of the stored and posted distance for that name
+//   POST /api/scores {name, meters, time?} -> keeps each name's best run: farther wins; at the 5K finish
+//                                         (5000 m) the faster time in seconds wins
 //
 // Scores are saved to $DATA_DIR/scores.json (default ./data). On Railway, attach a volume and set
 // DATA_DIR to its mount path (for example /data) so scores survive redeploys.
@@ -13,7 +14,8 @@ const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, 'data');
 const FILE = path.join(DATA_DIR, 'scores.json');
-const MAX_METERS = 500000;
+const FINISH_M = 5000;
+const MAX_METERS = FINISH_M;
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon' };
 const PRIVATE = new Set(['server.js', 'package.json', 'package-lock.json']);
 
@@ -33,8 +35,9 @@ function save() {
 }
 
 function top(n = 50) {
-  return Object.values(scores).sort((a, b) => b.best - a.best || a.at - b.at).slice(0, n)
-    .map(({ name, best, at }) => ({ name, best, at }));
+  return Object.values(scores)
+    .sort((a, b) => b.best - a.best || (a.time || 1e9) - (b.time || 1e9) || a.at - b.at).slice(0, n)
+    .map(({ name, best, time, at }) => (time ? { name, best, time, at } : { name, best, at }));
 }
 
 const hits = new Map();
@@ -66,9 +69,13 @@ function handleApi(req, res) {
     const meters = Math.floor(Number(data.meters));
     if (!name) return json(res, 400, { error: 'Name is required' });
     if (!Number.isFinite(meters) || meters < 0 || meters > MAX_METERS) return json(res, 400, { error: 'Invalid distance' });
+    let time = Math.round(Number(data.time));
+    if (meters < FINISH_M || !Number.isFinite(time) || time < 30 || time > 36000) time = 0;
     const key = name.toLowerCase();
-    if (!scores[key] || scores[key].best < meters) {
-      scores[key] = { name, best: meters, at: Date.now() };
+    const cur = scores[key];
+    const better = !cur || meters > cur.best || (meters === cur.best && time && (!cur.time || time < cur.time));
+    if (better) {
+      scores[key] = time ? { name, best: meters, time, at: Date.now() } : { name, best: meters, at: Date.now() };
       save();
     }
     json(res, 200, { ok: true, scores: top() });
