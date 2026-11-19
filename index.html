@@ -455,9 +455,12 @@ function makeTrain(len,moving){
 }
 const RAMP_L=6;
 const grassM=L(0x5cbf48),dirtM=L(0x6b4a2e);
-const chevTex=canvasTex(64,256,(g,w,h)=>{g.fillStyle='#e8cc92';g.fillRect(0,0,w,h);noise(g,w,h,500,.08);g.fillStyle='#ffffff';
+const chevTex=canvasTex(64,256,(g,w,h)=>{g.fillStyle='#9b7653';g.fillRect(0,0,w,h);
+  const dc=['#a8825c','#8a6646','#b8916a','#7a5a3e','#c29c74'];for(let i=0;i<1400;i++){g.fillStyle=dc[i%5];g.fillRect(Math.random()*w,Math.random()*h,1+Math.random()*2,1+Math.random()*2);}
+  const gc=['#ddd5c8','#b9b0a4','#8f877d'];for(let i=0;i<160;i++){g.fillStyle=gc[i%3];g.beginPath();g.ellipse(Math.random()*w,Math.random()*h,1+Math.random()*1.6,1+Math.random()*1.3,0,0,7);g.fill();}
+  g.fillStyle='rgba(255,255,255,.55)';
   for(let y=20;y<h;y+=48){g.beginPath();g.moveTo(w*.15,y+22);g.lineTo(w/2,y);g.lineTo(w*.85,y+22);g.lineTo(w*.85,y+32);g.lineTo(w/2,y+10);g.lineTo(w*.15,y+32);g.fill();}
-  g.fillStyle='#ffb703';g.fillRect(0,0,5,h);g.fillRect(w-5,0,5,h);});
+});
 const chevM=TM({map:chevTex});
 const rampGeo=(()=>{const sh=new THREE.Shape();sh.moveTo(0,0);sh.lineTo(-RAMP_L-.4,0);sh.lineTo(-RAMP_L-.4,TRAIN_H);sh.lineTo(-RAMP_L,TRAIN_H);sh.lineTo(0,0);
   const geo=new THREE.ExtrudeGeometry(sh,{depth:2.3,bevelEnabled:false});geo.rotateY(-Math.PI/2);geo.translate(1.15,0,0);return geo;})();
